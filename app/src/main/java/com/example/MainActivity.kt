@@ -49,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -61,6 +62,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
@@ -98,6 +100,12 @@ fun TraceItApp() {
     var scale by remember { mutableFloatStateOf(1f) }
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
+
+    val view = LocalView.current
+    DisposableEffect(isLocked) {
+        view.keepScreenOn = isLocked
+        onDispose { view.keepScreenOn = false }
+    }
 
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
 
@@ -191,20 +199,20 @@ fun TraceItApp() {
                             },
                             modifier = Modifier
                                 .size(48.dp)
-                                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
-                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
+                                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+                                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
                         ) {
-                            Icon(Icons.Default.Image, contentDescription = "Select Image", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Icon(Icons.Default.Image, contentDescription = "Select Image", tint = Color.White)
                         }
 
                         IconButton(
                             onClick = { isFrontCamera = !isFrontCamera },
                             modifier = Modifier
                                 .size(48.dp)
-                                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
-                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
+                                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+                                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
                         ) {
-                            Icon(Icons.Default.Cameraswitch, contentDescription = "Flip Camera", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Icon(Icons.Default.Cameraswitch, contentDescription = "Flip Camera", tint = Color.White)
                         }
                     }
 
@@ -219,8 +227,9 @@ fun TraceItApp() {
                         // Overlay Settings Panel
                         Surface(
                             shape = RoundedCornerShape(24.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
-                            shadowElevation = 8.dp
+                            color = Color.Black.copy(alpha = 0.4f),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
+                            shadowElevation = 0.dp
                         ) {
                             Column(
                                 modifier = Modifier.padding(16.dp),
@@ -232,8 +241,8 @@ fun TraceItApp() {
                                         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("TRANSPARENCY", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium, letterSpacing = 1.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text("${(alpha * 100).toInt()}%", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("TRANSPARENCY", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium, letterSpacing = 1.sp), color = Color.White)
+                                        Text("${(alpha * 100).toInt()}%", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium), color = Color.White)
                                     }
                                     Slider(
                                         value = alpha,
@@ -248,8 +257,8 @@ fun TraceItApp() {
                                         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("SCALE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium, letterSpacing = 1.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text(String.format("%.1fx", scale), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("SCALE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium, letterSpacing = 1.sp), color = Color.White)
+                                        Text(String.format("%.1fx", scale), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium), color = Color.White)
                                     }
                                     Slider(
                                         value = scale,
@@ -265,7 +274,12 @@ fun TraceItApp() {
                             onClick = { isLocked = true },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp)
+                                .height(48.dp),
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                containerColor = Color.Black.copy(alpha = 0.4f),
+                                contentColor = Color.White
+                            ),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
                         ) {
                             Icon(Icons.Default.Lock, contentDescription = "Lock Position")
                             Spacer(Modifier.width(8.dp))
@@ -285,7 +299,8 @@ fun TraceItApp() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp)
-                                .background(Color(0xFFE6E1E5).copy(alpha = 0.9f), RoundedCornerShape(28.dp)),
+                                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(28.dp))
+                                .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
                             contentAlignment = Alignment.CenterStart
                         ) {
                             val maxWidthPx = constraints.maxWidth.toFloat()
@@ -295,14 +310,14 @@ fun TraceItApp() {
                             Text(
                                 text = "SLIDE TO UNLOCK",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = Color.White,
                                 modifier = Modifier.align(Alignment.Center)
                             )
                             Box(
                                 modifier = Modifier
                                     .offset { IntOffset(offsetX.roundToInt(), 0) }
                                     .size(56.dp)
-                                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(28.dp))
+                                    .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(28.dp))
                                     .pointerInput(Unit) {
                                         detectDragGestures(
                                             onDragEnd = {
