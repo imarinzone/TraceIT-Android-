@@ -101,6 +101,12 @@ fun TraceItApp() {
 
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (!cameraPermissionState.status.isGranted) {
+            cameraPermissionState.launchPermissionRequest()
+        }
+    }
+
     val storagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.READ_MEDIA_IMAGES
     } else {
@@ -115,102 +121,12 @@ fun TraceItApp() {
     }
 
     Scaffold(
-        topBar = {
-            if (!isLocked) {
-                TopAppBar(
-                    title = { Text("TraceIt") },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        titleContentColor = MaterialTheme.colorScheme.onBackground
-                    )
-                )
-            }
-        },
-        bottomBar = {
-            if (isLocked) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp)
-                        .padding(horizontal = 24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    androidx.compose.foundation.layout.BoxWithConstraints(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .background(Color(0xFFE6E1E5), RoundedCornerShape(28.dp)),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        val maxWidthPx = constraints.maxWidth.toFloat()
-                        val thumbSizePx = with(androidx.compose.ui.platform.LocalDensity.current) { 56.dp.toPx() }
-                        var offsetX by remember { mutableFloatStateOf(0f) }
-
-                        Text(
-                            text = "SLIDE TO UNLOCK",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .offset { IntOffset(offsetX.roundToInt(), 0) }
-                                .size(56.dp)
-                                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(28.dp))
-                                .pointerInput(Unit) {
-                                    detectDragGestures(
-                                        onDragEnd = {
-                                            if (offsetX > maxWidthPx - thumbSizePx - 20f) {
-                                                isLocked = false
-                                            }
-                                            offsetX = 0f
-                                        }
-                                    ) { change, dragAmount ->
-                                        change.consume()
-                                        offsetX = (offsetX + dragAmount.x).coerceIn(0f, maxWidthPx - thumbSizePx)
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.LockOpen, contentDescription = "Unlock", tint = Color.White)
-                        }
-                    }
-                }
-            } else {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp),
-                    color = MaterialTheme.colorScheme.background,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 24.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Button(
-                            onClick = { isLocked = true },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp)
-                        ) {
-                            Icon(Icons.Default.Lock, contentDescription = "Lock Position")
-                            Spacer(Modifier.width(8.dp))
-                            Text("LOCK POSITION", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp))
-                        }
-                    }
-                }
-            }
-        }
+        modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         if (cameraPermissionState.status.isGranted) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
                     .background(Color(0xFF1C1B1F))
             ) {
                 CameraPreview(
@@ -261,6 +177,7 @@ fun TraceItApp() {
                     Column(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
+                            .padding(innerPadding)
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
@@ -291,51 +208,117 @@ fun TraceItApp() {
                         }
                     }
 
-                    // Overlay Settings Panel
-                    Surface(
+                    Column(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
+                            .padding(innerPadding)
                             .padding(16.dp)
                             .fillMaxWidth(),
-                        shape = RoundedCornerShape(24.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shadowElevation = 8.dp
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        // Overlay Settings Panel
+                        Surface(
+                            shape = RoundedCornerShape(24.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
+                            shadowElevation = 8.dp
                         ) {
-                            // Transparency Slider
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("TRANSPARENCY", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium, letterSpacing = 1.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text("${(alpha * 100).toInt()}%", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                // Transparency Slider
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("TRANSPARENCY", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium, letterSpacing = 1.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("${(alpha * 100).toInt()}%", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Slider(
+                                        value = alpha,
+                                        onValueChange = { alpha = it },
+                                        modifier = Modifier.height(24.dp)
+                                    )
                                 }
-                                Slider(
-                                    value = alpha,
-                                    onValueChange = { alpha = it },
-                                    modifier = Modifier.height(24.dp)
-                                )
-                            }
 
-                            // Scale Slider
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("SCALE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium, letterSpacing = 1.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(String.format("%.1fx", scale), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                // Scale Slider
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("SCALE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium, letterSpacing = 1.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(String.format("%.1fx", scale), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Slider(
+                                        value = scale,
+                                        onValueChange = { scale = it },
+                                        valueRange = 0.1f..5f,
+                                        modifier = Modifier.height(24.dp)
+                                    )
                                 }
-                                Slider(
-                                    value = scale,
-                                    onValueChange = { scale = it },
-                                    valueRange = 0.1f..5f,
-                                    modifier = Modifier.height(24.dp)
-                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { isLocked = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                        ) {
+                            Icon(Icons.Default.Lock, contentDescription = "Lock Position")
+                            Spacer(Modifier.width(8.dp))
+                            Text("LOCK POSITION", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp))
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .padding(innerPadding)
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        androidx.compose.foundation.layout.BoxWithConstraints(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .background(Color(0xFFE6E1E5).copy(alpha = 0.9f), RoundedCornerShape(28.dp)),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            val maxWidthPx = constraints.maxWidth.toFloat()
+                            val thumbSizePx = with(androidx.compose.ui.platform.LocalDensity.current) { 56.dp.toPx() }
+                            var offsetX by remember { mutableFloatStateOf(0f) }
+
+                            Text(
+                                text = "SLIDE TO UNLOCK",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .offset { IntOffset(offsetX.roundToInt(), 0) }
+                                    .size(56.dp)
+                                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(28.dp))
+                                    .pointerInput(Unit) {
+                                        detectDragGestures(
+                                            onDragEnd = {
+                                                if (offsetX > maxWidthPx - thumbSizePx - 20f) {
+                                                    isLocked = false
+                                                }
+                                                offsetX = 0f
+                                            }
+                                        ) { change, dragAmount ->
+                                            change.consume()
+                                            offsetX = (offsetX + dragAmount.x).coerceIn(0f, maxWidthPx - thumbSizePx)
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.LockOpen, contentDescription = "Unlock", tint = Color.White)
                             }
                         }
                     }
@@ -364,47 +347,48 @@ fun CameraPreview(lensFacing: Int, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    val previewView = remember { PreviewView(context).apply {
+        scaleType = PreviewView.ScaleType.FILL_CENTER
+    } }
+
+    androidx.compose.runtime.LaunchedEffect(lensFacing) {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+        cameraProviderFuture.addListener({
+            try {
+                val cameraProvider = cameraProviderFuture.get()
+                val preview = Preview.Builder().build().also {
+                    it.setSurfaceProvider(previewView.surfaceProvider)
+                }
+                val cameraSelector = CameraSelector.Builder()
+                    .requireLensFacing(lensFacing)
+                    .build()
+
+                val finalSelector = if (cameraProvider.hasCamera(cameraSelector)) {
+                    cameraSelector
+                } else if (cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA)) {
+                    CameraSelector.DEFAULT_BACK_CAMERA
+                } else if (cameraProvider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA)) {
+                    CameraSelector.DEFAULT_FRONT_CAMERA
+                } else {
+                    null
+                }
+
+                if (finalSelector != null) {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        lifecycleOwner,
+                        finalSelector,
+                        preview
+                    )
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("CameraPreview", "Use case binding failed", e)
+            }
+        }, ContextCompat.getMainExecutor(context))
+    }
+
     AndroidView(
         modifier = modifier,
-        factory = { ctx ->
-            PreviewView(ctx).apply {
-                this.scaleType = PreviewView.ScaleType.FILL_CENTER
-            }
-        },
-        update = { previewView ->
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-            cameraProviderFuture.addListener({
-                try {
-                    val cameraProvider = cameraProviderFuture.get()
-                    val preview = Preview.Builder().build().also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
-                    }
-                    val cameraSelector = CameraSelector.Builder()
-                        .requireLensFacing(lensFacing)
-                        .build()
-
-                    val finalSelector = if (cameraProvider.hasCamera(cameraSelector)) {
-                        cameraSelector
-                    } else if (cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA)) {
-                        CameraSelector.DEFAULT_BACK_CAMERA
-                    } else if (cameraProvider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA)) {
-                        CameraSelector.DEFAULT_FRONT_CAMERA
-                    } else {
-                        null
-                    }
-
-                    if (finalSelector != null) {
-                        cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            finalSelector,
-                            preview
-                        )
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e("CameraPreview", "Use case binding failed", e)
-                }
-            }, ContextCompat.getMainExecutor(context))
-        }
+        factory = { previewView }
     )
 }
