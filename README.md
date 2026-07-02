@@ -1,11 +1,22 @@
-<div align="center">
+# TraceIt
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+TraceIt is a sleek, modern Android application that helps users trace and draw images by overlaying them onto the device's camera feed. With intuitive controls for opacity, scale, and positioning, tracing any image onto paper becomes seamless and effortless.
 
-  <h1>Built with AI Studio</h2>
+## Features
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- **Image Overlay:** Select any image from your gallery to overlay on the camera feed.
+- **Camera Feed:** Real-time background camera view (supports both front and back cameras).
+- **Adjustable Opacity:** Easily change the transparency of the overlay image to see your drawing surface clearly.
+- **Scalable Image:** Pinch-to-zoom or use the slider to scale the reference image to the perfect size.
+- **Movable & Lockable Position:** Drag the image around to align it, then lock the position to prevent accidental movement while drawing.
+- **Clean Minimalism UI:** A beautiful, distraction-free interface built with Jetpack Compose.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Permissions
 
-</div>
+The app requires the following permissions to function correctly:
+- **Camera:** To display the background feed for tracing.
+- **Storage/Media:** To select an image from your device's gallery.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

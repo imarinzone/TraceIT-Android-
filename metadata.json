@@ -1,0 +1,6 @@
+{
+  "name": "TraceIt",
+  "description": "An app to overlay images on the camera for easy tracing and drawing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
